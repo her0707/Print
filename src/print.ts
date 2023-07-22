@@ -1,5 +1,5 @@
-import { addCustomStyleSheet, cloneElement, makePrintIframe } from "./html";
-import { iframePrint } from "./iframe-print";
+import { addCustomStyleSheet, clonePrintArea, copyTargetStyles, makePrintIframe } from "./utils/html";
+import { iframePrint } from "./utils/iframe-print";
 
 function print({
   node,
@@ -17,20 +17,20 @@ function print({
     printArea = document;
   }
 
-  const targetStyles = document.querySelectorAll("style, link, meta, base, title");
+  const styles = copyTargetStyles();
 
-  const styles = [...targetStyles];
   if (stylesheet) {
     const customStyle = addCustomStyleSheet(stylesheet);
     styles.push(customStyle);
   }
 
-  let copy = cloneElement(printArea, { ignoreElements });
+  let copy = clonePrintArea(printArea, { ignoreElements });
 
   if (!(printArea instanceof Document)) {
-    console.log(printArea);
     const printIframe = makePrintIframe({ title, frameId });
-    iframePrint(copy, printIframe, styles);
+    iframePrint(copy, printIframe, styles)
+      .then(iframe => document.body.removeChild(iframe))
+      .catch(e => console.error(e));
   } else {
     window.print();
   }
